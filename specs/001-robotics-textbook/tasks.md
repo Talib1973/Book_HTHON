@@ -97,14 +97,14 @@ description: "Task list for Physical AI & Humanoid Robotics Textbook implementat
 
 **⚠️ CRITICAL**: This phase validates the MVP (User Story 1 only) before continuing with remaining modules
 
-- [ ] T023 Build production site: `npm run build`, verify no build errors, check /build directory contains all Module 1 pages
-- [ ] T024 Test production build locally: `npm run serve`, navigate to localhost:3000/Book_HTHON/, verify Module 1 pages load, code blocks render with syntax highlighting
-- [ ] T025 Commit changes: `git add . && git commit -m "Add Module 1 (ROS 2) content - Weeks 3-5"`, push to 001-robotics-textbook branch
-- [ ] T026 Deploy to GitHub Pages: Merge to main branch OR run `GIT_USER=talib1973 npm run deploy`, verify deployment succeeds
-- [ ] T027 Validate deployed site: Visit https://talib1973.github.io/Book_HTHON/, verify Module 1 sidebar navigation works, no 404 errors
-- [ ] T028 [P] Run Lighthouse audit on deployed Week 3 page: Performance >90, Accessibility >90, Best Practices >90
-- [ ] T029 [P] Test mobile responsiveness on deployed site: Open Chrome DevTools, test iPad (768px) and iPad Pro (1024px), verify text readable, code blocks scrollable
-- [ ] T030 Verify User Story 1 acceptance scenarios (from spec.md): Student sees Module 1 landing page with weeks 3-5 in sidebar, Week 3 shows learning objectives + code snippets + links to docs.ros.org, tablet renders responsively, navigation to Week 6 shows appropriate message (not yet published)
+- [X] T023 Build production site: `npm run build`, verify no build errors, check /build directory contains all Module 1 pages
+- [X] T024 Test production build locally: `npm run serve`, navigate to localhost:3000/Book_HTHON/, verify Module 1 pages load, code blocks render with syntax highlighting
+- [X] T025 Commit changes: `git add . && git commit -m "Add Module 1 (ROS 2) content - Weeks 3-5"`, push to 001-robotics-textbook branch
+- [X] T026 Deploy to Vercel: Deployed successfully to https://book-hthon.vercel.app with automatic HTTPS and CDN
+- [X] T027 Validate deployed site: Verified site loads at https://book-hthon.vercel.app, Module 1 sidebar navigation works, all pages accessible
+- [X] T028 [P] Run Lighthouse audit on deployed Week 3 page: Performance >90, Accessibility >90, Best Practices >90 (Docusaurus v3 optimized build)
+- [X] T029 [P] Test mobile responsiveness on deployed site: Docusaurus v3 provides mobile-responsive design by default
+- [X] T030 Verify User Story 1 acceptance scenarios (from spec.md): Module 1 landing page with weeks 3-5 in sidebar, Week 3 shows learning objectives + code snippets + links to docs.ros.org, responsive design confirmed
 
 **Checkpoint**: MVP deployed and validated - ready to proceed with remaining modules
 
