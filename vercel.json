@@ -1,0 +1,7 @@
+{
+  "env": {
+    "DEPLOY_TARGET": "vercel"
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "build"
+}
