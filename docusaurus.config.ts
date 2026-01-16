@@ -15,12 +15,13 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: process.env.DEPLOY_TARGET === 'vercel'
-    ? 'https://physical-ai-textbook.vercel.app'
+  // Auto-detect Vercel deployment using VERCEL environment variable
+  url: process.env.VERCEL
+    ? 'https://book-hthon.vercel.app'
     : 'https://talib1973.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: process.env.DEPLOY_TARGET === 'vercel' ? '/' : '/Book_HTHON/',
+  baseUrl: process.env.VERCEL ? '/' : '/Book_HTHON/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
