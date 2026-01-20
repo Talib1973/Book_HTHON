@@ -160,7 +160,7 @@ app.add_middleware(
         "https://book-hthon.vercel.app"       # Production Vercel site
     ],
     allow_credentials=False,  # No cookies/auth for this demo
-    allow_methods=["POST", "OPTIONS"],  # Only POST for /chat and OPTIONS for preflight
+    allow_methods=["GET", "POST", "OPTIONS"],  # GET for health check, POST for /chat, OPTIONS for preflight
     allow_headers=["Content-Type"],  # Only JSON content
     max_age=600  # Cache preflight response for 10 minutes
 )
@@ -169,6 +169,24 @@ app.add_middleware(
 # ============================================================================
 # API Endpoints
 # ============================================================================
+
+@app.get(
+    "/",
+    summary="Health check endpoint",
+    description="Verify the API is running and accessible"
+)
+async def health_check():
+    """Health check endpoint - returns API status."""
+    return {
+        "status": "ok",
+        "service": "RAG Chatbot API",
+        "version": "1.0.0",
+        "endpoints": {
+            "chat": "POST /chat",
+            "docs": "GET /docs"
+        }
+    }
+
 
 @app.post(
     "/chat",
