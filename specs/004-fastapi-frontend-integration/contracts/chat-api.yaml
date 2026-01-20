@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  title: RAG Chatbot API
+  description: |
+    FastAPI backend for the Physical AI & Humanoid Robotics textbook chatbot.
+    Provides a single `/chat` endpoint that processes user queries using a RAG-powered
+    agent with retrieval from Qdrant vector database and response generation via OpenAI.
+
+    **Local Development Only**: This API runs on `http://localhost:8000` and is designed
+    for local testing with the Docusaurus frontend. Production deployment is out of scope.
+
+    **CORS**: Configured to allow requests from:
+    - `http://localhost:3000` (Docusaurus dev server)
+    - `https://book-hthon.vercel.app` (production Vercel site)
+
+  version: 1.0.0
+  contact:
+    name: Textbook Development Team
+    url: https://book-hthon.vercel.app
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: chat
+    description: Chat endpoints for RAG-powered textbook assistant
+
+paths:
+  /chat:
+    post:
+      tags:
+        - chat
+      summary: Send a chat message to the RAG agent
+      description: |
+        Processes a user query using the RAG-powered agent. The agent:
+        1. Generates embeddings for the query using Cohere
+        2. Retrieves relevant textbook chunks from Qdrant
+        3. Generates a grounded response using OpenAI with source citations
+
+        **Performance**: Typical response time is 5-15 seconds depending on agent processing.
+
+        **Context Parameter**: Optionally include selected textbook text to provide additional context for more targeted answers.
+
+      operationId: sendChatMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              simple_query:
+                summary: Simple question without context
+                value:
+                  message: "What is ROS 2?"
+              contextual_query:
+                summary: Question with selected text context
+                value:
+                  message: "Explain this concept in simpler terms"
+                  context: "Vision-Language-Action models combine visual perception with language understanding to enable robots to perform complex tasks based on natural language instructions."
+
+      responses:
+        '200':
+          description: Successful response with agent answer and citations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                with_sources:
+                  summary: Response with textbook citations
+                  value:
+                    response: "ROS 2 (Robot Operating System 2) is the second generation of ROS, designed for production robotics with improved security, real-time capabilities, and multi-platform support. It uses DDS for communication.\n\nSource: [ROS 2 Overview](https://book-hthon.vercel.app/docs/module1/week1)"
+                    sources:
+                      - title: "ROS 2 Overview"
+                        url: "https://book-hthon.vercel.app/docs/module1/week1"
+                      - title: "ROS 2 Architecture"
+                        url: "https://book-hthon.vercel.app/docs/module1/week2"
+                no_sources:
+                  summary: Response when no relevant content found
+                  value:
+                    response: "I couldn't find information about quantum mechanics in the robotics textbook. This topic might not be covered. Try asking about ROS 2, Digital Twins, NVIDIA Isaac, or VLA models instead."
+                    sources: []
+
+        '400':
+          description: Bad Request - Invalid input (empty message, malformed JSON, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                empty_message:
+                  summary: Empty or whitespace-only message
+                  value:
+                    error: "validation_error"
+                    message: "Message field cannot be empty or whitespace only"
+                    retryable: false
+                    error_id: null
+                message_too_long:
+                  summary: Message exceeds max length
+                  value:
+                    error: "validation_error"
+                    message: "Message must be between 1 and 2000 characters"
+                    retryable: false
+                    error_id: null
+
+        '415':
+          description: Unsupported Media Type - Content-Type must be application/json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "validation_error"
+                message: "Content-Type must be application/json"
+                retryable: false
+                error_id: null
+
+        '422':
+          description: Unprocessable Entity - Pydantic validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        loc:
+                          type: array
+                          items:
+                            type: string
+                        msg:
+                          type: string
+                        type:
+                          type: string
+              example:
+                detail:
+                  - loc: ["body", "message"]
+                    msg: "field required"
+                    type: "value_error.missing"
+
+        '500':
+          description: Internal Server Error - Unexpected server-side failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "server_error"
+                message: "An unexpected error occurred while processing your request. Please try again or contact support if the problem persists."
+                retryable: false
+                error_id: "f7d3c12a-8b1e-4f2c-9d6e-2a5b7c8e1d3f"
+
+        '503':
+          description: Service Unavailable - Temporary failure (e.g., Qdrant down, OpenAI API timeout)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                qdrant_unavailable:
+                  summary: Qdrant vector database unreachable
+                  value:
+                    error: "service_unavailable"
+                    message: "Unable to connect to Qdrant vector database. Please try again in a moment."
+                    retryable: true
+                    error_id: "a3f8c12d-4b2e-4d1c-9a7f-3c5e8b9d2f1a"
+                openai_timeout:
+                  summary: OpenAI API timeout
+                  value:
+                    error: "service_unavailable"
+                    message: "AI service timed out. Please try again."
+                    retryable: true
+                    error_id: "b2e7d34f-5c1a-4e3b-8d9f-1a6c7e2d8b3f"
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: User's question or query to the chatbot
+          example: "What is ROS 2?"
+        context:
+          type: string
+          nullable: true
+          maxLength: 5000
+          description: |
+            Optional selected text from a textbook page to provide additional context.
+            When provided, the agent can give more targeted answers referencing the selected content.
+          example: "ROS 2 is the second generation of the Robot Operating System, designed for production use with improved security and real-time capabilities."
+
+    Citation:
+      type: object
+      required:
+        - title
+        - url
+      properties:
+        title:
+          type: string
+          description: Title of the textbook page cited
+          example: "ROS 2 Architecture"
+        url:
+          type: string
+          format: uri
+          description: Full HTTPS URL to the cited textbook page
+          example: "https://book-hthon.vercel.app/docs/module1/week2"
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - sources
+      properties:
+        response:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          description: |
+            Agent's generated answer grounded in retrieved textbook content.
+            May include Markdown-formatted citations as inline links.
+          example: "ROS 2 (Robot Operating System 2) is the second generation of ROS, designed for production robotics with improved security, real-time capabilities, and multi-platform support. [ROS 2 Overview](https://book-hthon.vercel.app/docs/module1/week1)"
+        sources:
+          type: array
+          maxItems: 10
+          description: |
+            Array of citations for textbook content used in the response.
+            Empty array if no relevant content was found or the agent didn't use sources.
+          items:
+            $ref: '#/components/schemas/Citation'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - retryable
+      properties:
+        error:
+          type: string
+          enum:
+            - validation_error
+            - server_error
+            - service_unavailable
+          description: Error category for programmatic handling
+          example: "service_unavailable"
+        message:
+          type: string
+          description: Human-readable error description
+          example: "Unable to connect to Qdrant vector database. Please try again in a moment."
+        retryable:
+          type: boolean
+          description: |
+            Whether the client should retry the request.
+            - `true` for temporary failures (503 errors)
+            - `false` for permanent failures (400/500 errors)
+          example: true
+        error_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Unique identifier for this error instance (UUID v4).
+            Used for support lookup and debugging. Only present for 500/503 errors.
+          example: "f7d3c12a-8b1e-4f2c-9d6e-2a5b7c8e1d3f"
+
+  securitySchemes: {}
+
+security: []
+
+externalDocs:
+  description: Physical AI & Humanoid Robotics Textbook
+  url: https://book-hthon.vercel.app

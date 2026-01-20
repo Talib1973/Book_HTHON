@@ -208,3 +208,12 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Recent Changes
+- 004-fastapi-frontend-integration: Added Python 3.11+ (backend), TypeScript/React 19 (frontend)
+- 003-rag-agent: Added Python 3.11+ (existing backend/pyproject.toml specifies python = ">=3.11")
+- 002-rag-validation: Added Python 3.10+ (consistent with Spec 001 backend implementation) + cohere (SDK), qdrant-client (Python client), python-dotenv (env vars)
+
+## Active Technologies
+- Python 3.11+ (backend), TypeScript/React 19 (frontend) (004-fastapi-frontend-integration)
+- N/A (uses existing Qdrant Cloud from Spec 001) (004-fastapi-frontend-integration)

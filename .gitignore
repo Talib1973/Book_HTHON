@@ -46,3 +46,21 @@ coverage/
 .eslintcache
 .node_repl_history
 .yarn-integrity
+.vercel
+.env*.local
+
+# Python (backend)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+*.db
+*.sqlite
+*.sqlite3
