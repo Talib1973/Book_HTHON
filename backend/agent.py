@@ -43,12 +43,14 @@ from agents import Agent, Runner, function_tool, SQLiteSession, OpenAIChatComple
 
 # Load environment variables
 load_dotenv()
-ROUTER_API_KEY = "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" #os.getenv("OPENROUTE_API_KEY")
 
-client= AsyncOpenAI(api_key=ROUTER_API_KEY,
-                    base_url="https://openrouter.ai/api/v1"
-            )
-third_party_model= OpenAIChatCompletionsModel(openai_client=client, model="mistralai/devstral-2512:free")
+# Use OpenRouter for free model access
+ROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+client = AsyncOpenAI(
+    api_key=ROUTER_API_KEY,
+    base_url="https://openrouter.ai/api/v1"
+)
+third_party_model = OpenAIChatCompletionsModel(openai_client=client, model="mistralai/devstral-2512:free")
 # Global client variables (initialized in main(), used in retrieve_textbook_content)
 cohere_client: Optional[cohere.Client] = None
 qdrant_client: Optional[QdrantClient] = None
