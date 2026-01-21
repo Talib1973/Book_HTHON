@@ -233,8 +233,8 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         if request.context:
             query = f"{query}\n\nContext: {request.context.strip()}"
 
-        # Run agent with session memory
-        result = Runner.run_sync(agent, query, session=session)
+        # Run agent with session memory (async)
+        result = await Runner.run(agent, query, session=session)
 
         # Extract agent response
         agent_response = result.final_output
