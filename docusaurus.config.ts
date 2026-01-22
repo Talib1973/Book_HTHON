@@ -36,13 +36,9 @@ const config: Config = {
   },
 
   // Custom fields for chatbot backend configuration
-  // To enable the chatbot on Vercel, deploy the FastAPI backend and set BACKEND_API_URL here
-  // Example: BACKEND_API_URL: 'https://your-backend.railway.app' or 'https://your-backend.render.com'
   customFields: {
-    // For local development, the ChatWidget automatically uses http://localhost:8000
-    // For production (Vercel), uncomment and set your deployed backend URL:
-    // BACKEND_API_URL: 'https://your-deployed-backend-url.com',
-    BACKEND_API_URL: process.env.BACKEND_API_URL || undefined,
+    // Railway backend URL for production chatbot
+    BACKEND_API_URL: 'https://victorious-presence-production.up.railway.app',
   },
 
   presets: [
