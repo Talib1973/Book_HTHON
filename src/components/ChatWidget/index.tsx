@@ -22,7 +22,7 @@ interface Message {
 
 // Environment-aware API URL
 // In development: use localhost:8000
-// In production (Vercel): use environment variable or show config message
+// In production (Vercel): use Railway backend
 const getApiUrl = (): string => {
   // Check if running in browser
   if (typeof window === 'undefined') {
@@ -34,18 +34,8 @@ const getApiUrl = (): string => {
     return 'http://localhost:8000/chat';
   }
 
-  // Production: Use environment variable if set, otherwise return empty
-  // Note: In Docusaurus, you can set this in docusaurus.config.ts customFields
-  // @ts-ignore - customFields from Docusaurus config
-  const backendUrl = window.docusaurus?.siteConfig?.customFields?.BACKEND_API_URL;
-
-  if (backendUrl) {
-    return `${backendUrl}/chat`;
-  }
-
-  // If no backend URL configured in production, return empty string
-  // This will trigger the "backend not configured" message
-  return '';
+  // Production: Railway backend URL
+  return 'https://victorious-presence-production.up.railway.app/chat';
 };
 
 const API_URL = getApiUrl();
