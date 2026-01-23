@@ -248,14 +248,25 @@ def retrieve_textbook_content(query: str, k: int = 3) -> Dict[str, Any]:
         # Clamp k to valid range
         k = max(1, min(k, 10))
 
+        print(f"🔍 Retrieving textbook content for query: {query[:50]}...")
+
         # Generate embedding and search
+        print(f"  → Generating embedding with Cohere...")
         embedding = generate_query_embedding(query, cohere_client)
+        print(f"  ✓ Embedding generated ({len(embedding)} dimensions)")
+
+        print(f"  → Searching Qdrant for top {k} results...")
         results = search_qdrant(embedding, qdrant_client, k)
+        print(f"  ✓ Found {len(results)} results")
 
         return {"results": results, "error": None}
 
     except Exception as e:
-        return {"results": [], "error": f"Retrieval failed: {str(e)}"}
+        error_msg = f"Retrieval failed: {str(e)}"
+        print(f"❌ {error_msg}")
+        import traceback
+        traceback.print_exc()
+        return {"results": [], "error": error_msg}
 
 
 def create_agent() -> Agent:
