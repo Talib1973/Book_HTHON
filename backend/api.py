@@ -26,6 +26,7 @@ import uvicorn
 from dotenv import load_dotenv
 
 # Import existing agent module
+import agent  # Import as module to set its globals
 from agent import create_agent, validate_environment, initialize_clients
 from agents import Runner, SQLiteSession
 
@@ -35,7 +36,7 @@ load_dotenv()
 # Global clients and agent (initialized at startup)
 cohere_client = None
 qdrant_client = None
-agent = None
+agent_instance = None  # Renamed to avoid conflict with agent module
 session = None
 
 
@@ -100,7 +101,7 @@ async def lifespan(app: FastAPI):
 
     Initializes global clients and agent on startup, cleans up on shutdown.
     """
-    global cohere_client, qdrant_client, agent, session
+    global cohere_client, qdrant_client, agent_instance, session
 
     print("=" * 60)
     print("FastAPI RAG Chatbot - Starting up...")
@@ -113,8 +114,12 @@ async def lifespan(app: FastAPI):
         # Initialize API clients
         cohere_client, qdrant_client = initialize_clients(env_vars)
 
+        # CRITICAL: Set agent.py's global variables so retrieve_textbook_content can use them
+        agent.cohere_client = cohere_client
+        agent.qdrant_client = qdrant_client
+
         # Create agent instance
-        agent = create_agent()
+        agent_instance = create_agent()
 
         # Initialize session for conversation memory
         session = SQLiteSession("fastapi_chatbot")
@@ -213,7 +218,7 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
     Raises:
         HTTPException: 400 for validation errors, 500 for server errors, 503 for service unavailable
     """
-    global agent, session, cohere_client, qdrant_client
+    global agent_instance, session, cohere_client, qdrant_client
 
     # Validate message is not empty or whitespace only
     if not request.message or not request.message.strip():
@@ -234,7 +239,7 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
             query = f"{query}\n\nContext: {request.context.strip()}"
 
         # Run agent with session memory (async)
-        result = await Runner.run(agent, query, session=session)
+        result = await Runner.run(agent_instance, query, session=session)
 
         # Extract agent response
         agent_response = result.final_output
