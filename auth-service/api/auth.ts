@@ -2,31 +2,43 @@ import { betterAuth } from "better-auth";
 import { Pool } from "pg";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Initialize PostgreSQL pool with error handling
+// Cached instances
 let pool: Pool | null = null;
-let auth: any = null;
+let authInstance: ReturnType<typeof betterAuth> | null = null;
+let initError: Error | null = null;
 
-function getPool() {
-  if (!pool) {
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      },
-      max: 1, // Limit connections in serverless
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    });
-  }
-  return pool;
-}
+async function initializeAuth() {
+  if (authInstance) return authInstance;
+  if (initError) throw initError;
 
-function getAuth() {
-  if (!auth) {
-    const dbPool = getPool();
+  try {
+    console.log("[Auth Init] Starting initialization...");
 
-    auth = betterAuth({
-      database: dbPool,
+    // Create pool
+    if (!pool) {
+      console.log("[Auth Init] Creating database pool...");
+      pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false
+        },
+        max: 1,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+
+      // Test connection
+      console.log("[Auth Init] Testing database connection...");
+      const client = await pool.connect();
+      await client.query('SELECT NOW()');
+      client.release();
+      console.log("[Auth Init] Database connected successfully");
+    }
+
+    // Create Better Auth instance
+    console.log("[Auth Init] Creating Better Auth instance...");
+    authInstance = betterAuth({
+      database: pool,
       secret: process.env.BETTER_AUTH_SECRET || "",
       baseURL: process.env.BETTER_AUTH_URL || "",
       emailAndPassword: {
@@ -34,23 +46,34 @@ function getAuth() {
         minPasswordLength: 8,
       },
       session: {
-        expiresIn: 60 * 60 * 24 * 7, // 7 days
-        updateAge: 60 * 60 * 24, // Refresh if accessed within 1 day
+        expiresIn: 60 * 60 * 24 * 7,
+        updateAge: 60 * 60 * 24,
       },
       trustedOrigins: (process.env.ALLOWED_ORIGINS || "")
         .split(",")
         .map(o => o.trim())
         .filter(Boolean),
     });
+
+    console.log("[Auth Init] Better Auth instance created successfully");
+    return authInstance;
+  } catch (error) {
+    console.error("[Auth Init] Initialization failed:", error);
+    initError = error as Error;
+    throw error;
   }
-  return auth;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // Enable CORS
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map(o => o.trim()).filter(Boolean);
-    const origin = req.headers.origin || "";
+    console.log(`[Auth Handler] ${req.method} ${req.url}`);
+
+    // CORS headers
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+      .split(",")
+      .map(o => o.trim())
+      .filter(Boolean);
+    const origin = (req.headers.origin || "") as string;
 
     if (allowedOrigins.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
@@ -62,22 +85,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Handle preflight
     if (req.method === "OPTIONS") {
+      console.log("[Auth Handler] Handling OPTIONS preflight");
       return res.status(200).end();
     }
 
-    // Get auth instance
-    const authInstance = getAuth();
+    // Initialize auth
+    console.log("[Auth Handler] Initializing auth...");
+    const auth = await initializeAuth();
+    console.log("[Auth Handler] Auth initialized");
 
-    // Construct full URL
-    const protocol = req.headers["x-forwarded-proto"] || "https";
+    // Build Web Request
+    const protocol = (req.headers["x-forwarded-proto"] as string) || "https";
     const host = req.headers.host;
     const url = `${protocol}://${host}${req.url}`;
 
-    console.log(`[Auth] ${req.method} ${url}`);
-    console.log(`[Auth] Origin: ${origin}`);
-    console.log(`[Auth] Headers:`, JSON.stringify(Object.keys(req.headers)));
+    console.log(`[Auth Handler] Building request for: ${url}`);
 
-    // Build headers for Web Request
     const headers = new Headers();
     Object.entries(req.headers).forEach(([key, value]) => {
       if (value) {
@@ -85,34 +108,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    // Handle request body
     let body: string | undefined = undefined;
-    if (req.method !== "GET" && req.method !== "HEAD") {
-      if (req.body) {
-        // If body is already parsed by Vercel, stringify it
-        body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
-      }
+    if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
+      body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      console.log(`[Auth Handler] Request body length: ${body.length}`);
     }
 
-    console.log(`[Auth] Body type:`, typeof req.body);
-    console.log(`[Auth] Body:`, body ? body.substring(0, 100) : "none");
-
-    // Create Web Request
     const webRequest = new Request(url, {
       method: req.method || "GET",
       headers: headers,
       body: body,
     });
 
-    // Call Better Auth handler
-    console.log(`[Auth] Calling auth.handler...`);
-    const webResponse = await authInstance.handler(webRequest);
+    // Call Better Auth
+    console.log("[Auth Handler] Calling auth.handler...");
+    const webResponse = await auth.handler(webRequest);
+    console.log(`[Auth Handler] Response status: ${webResponse.status}`);
 
-    console.log(`[Auth] Response status: ${webResponse.status}`);
-
-    // Set response headers (but avoid duplicate CORS headers)
+    // Set response headers
     webResponse.headers.forEach((value, key) => {
-      // Skip CORS headers as we already set them
       if (!key.toLowerCase().startsWith('access-control-')) {
         res.setHeader(key, value);
       }
@@ -120,17 +134,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Send response
     const responseBody = await webResponse.text();
-    console.log(`[Auth] Response body length: ${responseBody.length}`);
+    console.log(`[Auth Handler] Sending response, body length: ${responseBody.length}`);
 
     res.status(webResponse.status).send(responseBody);
-  } catch (error) {
-    console.error("[Auth] Handler error:", error);
-    console.error("[Auth] Error stack:", error instanceof Error ? error.stack : "No stack");
 
-    res.status(500).json({
-      error: "Authentication error",
+  } catch (error) {
+    console.error("[Auth Handler] Error:", error);
+    console.error("[Auth Handler] Error stack:", error instanceof Error ? error.stack : "No stack");
+
+    return res.status(500).json({
+      error: "Authentication service error",
       message: error instanceof Error ? error.message : "Unknown error",
-      stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
+      details: process.env.NODE_ENV === 'production' ? undefined : String(error)
     });
   }
 }
