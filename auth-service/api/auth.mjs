@@ -1,10 +1,10 @@
+import { betterAuth } from "better-auth";
 import { Pool } from "pg";
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Cached instances
-let pool: Pool | null = null;
-let authInstance: any = null;
-let initError: Error | null = null;
+// Cached instances  
+let pool = null;
+let authInstance = null;
+let initError = null;
 
 async function initializeAuth() {
   if (authInstance) return authInstance;
@@ -13,19 +13,12 @@ async function initializeAuth() {
   try {
     console.log("[Auth Init] Starting initialization...");
 
-    // Dynamic import of Better Auth (ES Module)
-    console.log("[Auth Init] Importing betterAuth...");
-    const { betterAuth } = await import("better-auth");
-    console.log("[Auth Init] betterAuth imported successfully");
-
     // Create pool
     if (!pool) {
       console.log("[Auth Init] Creating database pool...");
       pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false
-        },
+        ssl: { rejectUnauthorized: false },
         max: 1,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
@@ -53,36 +46,29 @@ async function initializeAuth() {
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,
       },
-      trustedOrigins: (process.env.ALLOWED_ORIGINS || "")
-        .split(",")
-        .map(o => o.trim())
-        .filter(Boolean),
+      trustedOrigins: (process.env.ALLOWED_ORIGINS || "").split(",").map(o => o.trim()).filter(Boolean),
     });
 
     console.log("[Auth Init] Better Auth instance created successfully");
     return authInstance;
   } catch (error) {
     console.error("[Auth Init] Initialization failed:", error);
-    initError = error as Error;
+    initError = error;
     throw error;
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   try {
     console.log(`[Auth Handler] ${req.method} ${req.url}`);
 
-    // CORS headers
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
-      .split(",")
-      .map(o => o.trim())
-      .filter(Boolean);
-    const origin = (req.headers.origin || "") as string;
+    // CORS
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map(o => o.trim()).filter(Boolean);
+    const origin = req.headers.origin || "";
 
     if (allowedOrigins.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
     }
-
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
@@ -99,20 +85,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log("[Auth Handler] Auth initialized");
 
     // Build Web Request
-    const protocol = (req.headers["x-forwarded-proto"] as string) || "https";
+    const protocol = req.headers["x-forwarded-proto"] || "https";
     const host = req.headers.host;
     const url = `${protocol}://${host}${req.url}`;
 
-    console.log(`[Auth Handler] Building request for: ${url}`);
-
     const headers = new Headers();
     Object.entries(req.headers).forEach(([key, value]) => {
-      if (value) {
-        headers.set(key, Array.isArray(value) ? value.join(", ") : String(value));
-      }
+      if (value) headers.set(key, Array.isArray(value) ? value.join(", ") : String(value));
     });
 
-    let body: string | undefined = undefined;
+    let body = undefined;
     if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
       body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
       console.log(`[Auth Handler] Request body length: ${body.length}`);
@@ -120,8 +102,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const webRequest = new Request(url, {
       method: req.method || "GET",
-      headers: headers,
-      body: body,
+      headers,
+      body,
     });
 
     // Call Better Auth
@@ -139,17 +121,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Send response
     const responseBody = await webResponse.text();
     console.log(`[Auth Handler] Sending response, body length: ${responseBody.length}`);
-
     res.status(webResponse.status).send(responseBody);
 
   } catch (error) {
     console.error("[Auth Handler] Error:", error);
-    console.error("[Auth Handler] Error stack:", error instanceof Error ? error.stack : "No stack");
-
     return res.status(500).json({
       error: "Authentication service error",
-      message: error instanceof Error ? error.message : "Unknown error",
-      details: process.env.NODE_ENV === 'production' ? undefined : String(error)
+      message: error.message || "Unknown error"
     });
   }
 }
