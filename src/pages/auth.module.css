@@ -20,6 +20,17 @@
   text-align: center;
 }
 
+.authTitle {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.authSubtitle {
+  text-align: center;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 2rem;
+}
+
 .subtitle {
   text-align: center;
   color: var(--ifm-color-emphasis-600);
@@ -41,6 +52,26 @@
 .formGroup label {
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.formLabel {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.formInput {
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  font-size: 1rem;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px var(--ifm-color-primary-lightest);
 }
 
 .formGroup input {
@@ -110,6 +141,16 @@
 }
 
 .authFooter a:hover {
+  text-decoration: underline;
+}
+
+.authLink {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.authLink:hover {
   text-decoration: underline;
 }
 

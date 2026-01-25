@@ -25,10 +25,10 @@ export default function AuthNav(): JSX.Element {
 
   return (
     <div className={styles.authNav}>
-      <a href="/login" className={styles.authLink}>
-        Log In
+      <a href="/auth/sign-in" className={styles.authLink}>
+        Sign In
       </a>
-      <a href="/signup" className={styles.authButton}>
+      <a href="/auth/sign-up" className={styles.authButton}>
         Sign Up
       </a>
     </div>
