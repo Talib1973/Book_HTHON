@@ -1,7 +1,13 @@
 {
   "functions": {
-    "api/**/*.ts": {
+    "api/auth.mjs": {
       "runtime": "@vercel/node@3.0.21"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth"
+    }
+  ]
 }
