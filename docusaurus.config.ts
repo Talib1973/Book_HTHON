@@ -40,7 +40,7 @@ const config: Config = {
     // Railway backend URL for production chatbot
     BACKEND_API_URL: 'https://victorious-presence-production.up.railway.app',
     // Auth service URL (Node.js/Better Auth)
-    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
+    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'https://auth-service-one-eta.vercel.app',
   },
 
   presets: [
