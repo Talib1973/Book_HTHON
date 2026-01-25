@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import Layout from '@theme/Layout';
 import { authClient } from '@site/src/lib/auth-client';
-import { useNavigate } from '@docusaurus/router';
 import styles from '../auth.module.css';
 
 export default function SignIn() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -46,7 +44,7 @@ export default function SignIn() {
 
       // Success! Redirect to home
       console.log('Sign in successful:', response);
-      navigate('/');
+      window.location.href = '/';
     } catch (err) {
       console.error('Sign in error:', err);
       setError('An unexpected error occurred. Please try again.');
