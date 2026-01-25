@@ -39,6 +39,8 @@ const config: Config = {
   customFields: {
     // Railway backend URL for production chatbot
     BACKEND_API_URL: 'https://victorious-presence-production.up.railway.app',
+    // Auth service URL (Node.js/Better Auth)
+    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
   },
 
   presets: [
@@ -82,6 +84,10 @@ const config: Config = {
         {
           href: 'https://github.com/talib1973/Book_HTHON',
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          type: 'custom-authNav',
           position: 'right',
         },
       ],

@@ -210,10 +210,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
 ## Recent Changes
+- 005-better-auth-personalization: Added Python 3.11+ (FastAPI backend), TypeScript/Node.js 20+ (Better Auth service), TypeScript/React 19 (Docusaurus frontend) + Better Auth 1.x, FastAPI 0.100+, Docusaurus 3.9.2, asyncpg (PostgreSQL client), Better Auth React SDK
 - 004-fastapi-frontend-integration: Added Python 3.11+ (backend), TypeScript/React 19 (frontend)
 - 003-rag-agent: Added Python 3.11+ (existing backend/pyproject.toml specifies python = ">=3.11")
-- 002-rag-validation: Added Python 3.10+ (consistent with Spec 001 backend implementation) + cohere (SDK), qdrant-client (Python client), python-dotenv (env vars)
 
 ## Active Technologies
-- Python 3.11+ (backend), TypeScript/React 19 (frontend) (004-fastapi-frontend-integration)
-- N/A (uses existing Qdrant Cloud from Spec 001) (004-fastapi-frontend-integration)
+- Python 3.11+ (FastAPI backend), TypeScript/Node.js 20+ (Better Auth service), TypeScript/React 19 (Docusaurus frontend) + Better Auth 1.x, FastAPI 0.100+, Docusaurus 3.9.2, asyncpg (PostgreSQL client), Better Auth React SDK (005-better-auth-personalization)
+- Neon Serverless PostgreSQL (shared across Better Auth and FastAPI) (005-better-auth-personalization)

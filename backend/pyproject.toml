@@ -8,9 +8,11 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.29.0",
     "beautifulsoup4>=4.14.3",
     "cohere>=5.20.1",
     "fastapi>=0.115.0",
+    "httpx>=0.28.1",
     "lxml>=6.0.2",
     "openai-agents>=0.6.7",
     "python-dotenv>=1.2.1",

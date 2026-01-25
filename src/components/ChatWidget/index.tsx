@@ -81,6 +81,7 @@ export default function ChatWidget(): JSX.Element {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send session cookie for user context
         body: JSON.stringify(requestBody),
       });
 

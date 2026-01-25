@@ -19,7 +19,7 @@ import uuid
 from typing import Optional, Literal
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
@@ -29,6 +29,8 @@ from dotenv import load_dotenv
 import agent  # Import as module to set its globals
 from agent import create_agent, validate_environment, initialize_clients
 from agents import Runner, SQLiteSession
+from database import db
+from dependencies import get_current_user
 
 # Load environment variables
 load_dotenv()
@@ -90,6 +92,38 @@ class ErrorResponse(BaseModel):
     error_id: Optional[str] = None
 
 
+class ProfileRequest(BaseModel):
+    """Request model for creating/updating user profile."""
+    programming_experience: Literal["beginner", "intermediate", "advanced"] = Field(
+        ...,
+        description="User's programming skill level"
+    )
+    hardware_access: list[str] = Field(
+        default_factory=list,
+        max_length=20,
+        description="List of hardware platforms user has access to"
+    )
+    learning_goal: Literal["theory", "implementation", "both"] = Field(
+        ...,
+        description="User's primary learning objective"
+    )
+
+
+class ProfileResponse(BaseModel):
+    """Response model for profile operations."""
+    success: bool
+    message: str
+
+
+class UserProfile(BaseModel):
+    """User profile data model."""
+    programming_experience: str
+    hardware_access: list[str]
+    learning_goal: str
+    created_at: str
+    updated_at: str
+
+
 # ============================================================================
 # Application Lifecycle
 # ============================================================================
@@ -124,6 +158,9 @@ async def lifespan(app: FastAPI):
         # Initialize session for conversation memory
         session = SQLiteSession("fastapi_chatbot")
 
+        # Connect to PostgreSQL database for authentication
+        await db.connect()
+
         print("✅ FastAPI server ready")
         print(f"📡 Listening on http://0.0.0.0:8000")
         print(f"📖 API docs at http://localhost:8000/docs")
@@ -138,6 +175,7 @@ async def lifespan(app: FastAPI):
     finally:
         # Cleanup on shutdown
         print("\n🛑 Shutting down FastAPI server...")
+        await db.disconnect()
 
 
 # ============================================================================
@@ -160,14 +198,10 @@ app = FastAPI(
 # Allow requests from Docusaurus dev server and production Vercel site
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",              # Docusaurus dev server
-        "https://book-hthon.vercel.app"       # Production Vercel site
-    ],
-    allow_credentials=False,  # No cookies/auth for this demo
-    allow_methods=["GET", "POST", "OPTIONS"],  # GET for health check, POST for /chat, OPTIONS for preflight
-    allow_headers=["Content-Type"],  # Only JSON content
-    max_age=600  # Cache preflight response for 10 minutes
+    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001,https://book-hthon.vercel.app").split(","),
+    allow_credentials=True,  # REQUIRED for session cookies
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -283,6 +317,143 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
                     error_id=error_id
                 ).model_dump()
             )
+
+
+@app.post(
+    "/profile",
+    response_model=ProfileResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized - Invalid session"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    },
+    summary="Create or update user profile",
+    description="Save user's learning background and preferences for personalized content"
+)
+async def create_profile(
+    request: ProfileRequest,
+    user_id: str = Depends(get_current_user)
+) -> ProfileResponse:
+    """
+    Create or update user profile with learning background.
+
+    Args:
+        request: ProfileRequest with programming experience, hardware access, and learning goal
+        user_id: User ID from validated session (injected by dependency)
+
+    Returns:
+        ProfileResponse with success status
+
+    Raises:
+        HTTPException: 401 for invalid session, 500 for server errors
+    """
+    try:
+        # Insert or update user profile (upsert)
+        await db.execute(
+            '''
+            INSERT INTO user_profile (user_id, programming_experience, hardware_access, learning_goal)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (user_id)
+            DO UPDATE SET
+                programming_experience = EXCLUDED.programming_experience,
+                hardware_access = EXCLUDED.hardware_access,
+                learning_goal = EXCLUDED.learning_goal,
+                updated_at = CURRENT_TIMESTAMP
+            ''',
+            user_id,
+            request.programming_experience,
+            request.hardware_access,
+            request.learning_goal
+        )
+
+        return ProfileResponse(
+            success=True,
+            message="Profile saved successfully"
+        )
+
+    except Exception as e:
+        error_id = str(uuid.uuid4())
+        print(f"❌ Profile save error [{error_id}]: {e}")
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ErrorResponse(
+                error="server_error",
+                message="Failed to save profile. Please try again.",
+                retryable=True,
+                error_id=error_id
+            ).model_dump()
+        )
+
+
+@app.get(
+    "/profile",
+    response_model=UserProfile,
+    status_code=status.HTTP_200_OK,
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized - Invalid session"},
+        404: {"model": ErrorResponse, "description": "Profile not found"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    },
+    summary="Get user profile",
+    description="Retrieve the authenticated user's learning profile"
+)
+async def get_profile(user_id: str = Depends(get_current_user)) -> UserProfile:
+    """
+    Retrieve user's learning profile.
+
+    Args:
+        user_id: User ID from validated session (injected by dependency)
+
+    Returns:
+        UserProfile with user's learning background and preferences
+
+    Raises:
+        HTTPException: 401 for invalid session, 404 if profile not found, 500 for server errors
+    """
+    try:
+        profile = await db.fetch_one(
+            '''
+            SELECT programming_experience, hardware_access, learning_goal, created_at, updated_at
+            FROM user_profile
+            WHERE user_id = $1
+            ''',
+            user_id
+        )
+
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ErrorResponse(
+                    error="validation_error",
+                    message="Profile not found. Please complete profile setup.",
+                    retryable=False
+                ).model_dump()
+            )
+
+        return UserProfile(
+            programming_experience=profile['programming_experience'],
+            hardware_access=profile['hardware_access'],
+            learning_goal=profile['learning_goal'],
+            created_at=profile['created_at'].isoformat(),
+            updated_at=profile['updated_at'].isoformat()
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_id = str(uuid.uuid4())
+        print(f"❌ Profile fetch error [{error_id}]: {e}")
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ErrorResponse(
+                error="server_error",
+                message="Failed to fetch profile. Please try again.",
+                retryable=True,
+                error_id=error_id
+            ).model_dump()
+        )
 
 
 def extract_citations(agent_response: str) -> list[Citation]:
