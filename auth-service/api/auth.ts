@@ -1,10 +1,9 @@
-import { betterAuth } from "better-auth";
 import { Pool } from "pg";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Cached instances
 let pool: Pool | null = null;
-let authInstance: ReturnType<typeof betterAuth> | null = null;
+let authInstance: any = null;
 let initError: Error | null = null;
 
 async function initializeAuth() {
@@ -13,6 +12,11 @@ async function initializeAuth() {
 
   try {
     console.log("[Auth Init] Starting initialization...");
+
+    // Dynamic import of Better Auth (ES Module)
+    console.log("[Auth Init] Importing betterAuth...");
+    const { betterAuth } = await import("better-auth");
+    console.log("[Auth Init] betterAuth imported successfully");
 
     // Create pool
     if (!pool) {
