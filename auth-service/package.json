@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
+    "build": "echo 'Serverless functions - no build needed'",
     "start": "ts-node src/index.ts"
   },
   "keywords": [
