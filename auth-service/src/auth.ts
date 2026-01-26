@@ -24,7 +24,7 @@ console.log("   Trusted Origins:", trustedOrigins);
 export const auth = betterAuth({
   database: pool,
   secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-change-in-production",
-  baseURL: "http://localhost:3001",
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
@@ -33,5 +33,5 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // Refresh if accessed within 1 day
   },
-  trustedOrigins: ["http://localhost:3000", "https://book-hthon.vercel.app"],
+  trustedOrigins: trustedOrigins,
 });
