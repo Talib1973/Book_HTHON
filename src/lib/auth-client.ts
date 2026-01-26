@@ -4,9 +4,9 @@ import { createAuthClient } from "better-auth/react";
 const getAuthServiceUrl = (): string => {
   if (typeof window !== 'undefined') {
     // @ts-ignore - customFields is set in docusaurus.config.ts
-    return window.docusaurus?.siteConfig?.customFields?.AUTH_SERVICE_URL || "http://localhost:3001";
+    return window.docusaurus?.siteConfig?.customFields?.AUTH_SERVICE_URL || "https://auth-service-one-eta.vercel.app";
   }
-  return "http://localhost:3001";
+  return "https://auth-service-one-eta.vercel.app";
 };
 
 export const authClient = createAuthClient({
