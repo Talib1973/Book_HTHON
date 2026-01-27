@@ -125,7 +125,11 @@ export default function SignIn() {
             </div>
 
             <button
-              type="submit"
+              type="button"
+              onClick={(e) => {
+                console.log('🟢 Button clicked!');
+                handleSubmit(e as any);
+              }}
               className={styles.submitButton}
               disabled={loading}
             >
