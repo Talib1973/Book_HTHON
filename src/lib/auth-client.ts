@@ -1,7 +1,12 @@
 import { createAuthClient } from "better-auth/react";
 
-// Production auth service URL
-const AUTH_SERVICE_URL = "https://auth-service-one-eta.vercel.app";
+// Use local proxy path - Vercel will rewrite to auth service
+// This ensures cookies are set on the same domain (book-hthon.vercel.app)
+const AUTH_SERVICE_URL = typeof window !== 'undefined'
+  ? `${window.location.origin}/api/auth`
+  : "https://book-hthon.vercel.app/api/auth";
+
+console.log("🔐 Auth client initialized with base URL:", AUTH_SERVICE_URL);
 
 export const authClient = createAuthClient({
   baseURL: AUTH_SERVICE_URL,

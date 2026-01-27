@@ -3,5 +3,11 @@
     "DEPLOY_TARGET": "vercel"
   },
   "buildCommand": "npm run build",
-  "outputDirectory": "build"
+  "outputDirectory": "build",
+  "rewrites": [
+    {
+      "source": "/api/auth/:path*",
+      "destination": "https://auth-service-one-eta.vercel.app/api/auth/:path*"
+    }
+  ]
 }
