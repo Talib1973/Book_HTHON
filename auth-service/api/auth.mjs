@@ -34,6 +34,11 @@ async function initializeAuth() {
 
     // Create Better Auth instance
     console.log("[Auth Init] Creating Better Auth instance...");
+
+    const trustedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map(o => o.trim()).filter(Boolean);
+    console.log("[Auth Init] Trusted origins:", trustedOrigins);
+    console.log("[Auth Init] Base URL:", process.env.BETTER_AUTH_URL);
+
     authInstance = betterAuth({
       database: pool,
       secret: process.env.BETTER_AUTH_SECRET || "",
@@ -45,8 +50,19 @@ async function initializeAuth() {
       session: {
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,
+        cookieCache: {
+          enabled: true,
+          maxAge: 60 * 60 * 24 * 7,
+        },
       },
-      trustedOrigins: (process.env.ALLOWED_ORIGINS || "").split(",").map(o => o.trim()).filter(Boolean),
+      advanced: {
+        cookiePrefix: "better-auth",
+        useSecureCookies: true,
+        crossSubDomainCookies: {
+          enabled: false, // Disable because we're on different domains
+        },
+      },
+      trustedOrigins: trustedOrigins,
     });
 
     console.log("[Auth Init] Better Auth instance created successfully");
@@ -115,8 +131,15 @@ export default async function handler(req, res) {
     webResponse.headers.forEach((value, key) => {
       if (!key.toLowerCase().startsWith('access-control-')) {
         res.setHeader(key, value);
+        // Log cookie headers for debugging
+        if (key.toLowerCase() === 'set-cookie') {
+          console.log(`[Auth Handler] Setting cookie: ${value}`);
+        }
       }
     });
+
+    // Log all response headers for debugging
+    console.log("[Auth Handler] Response headers:", Object.fromEntries(webResponse.headers.entries()));
 
     // Send response
     const responseBody = await webResponse.text();
