@@ -35,12 +35,12 @@ const config: Config = {
     locales: ['en'],
   },
 
-  // Custom fields for chatbot backend configuration
+  // Custom fields for chatbot backend configuration (hardcoded for production)
   customFields: {
     // Railway backend URL for production chatbot
     BACKEND_API_URL: 'https://victorious-presence-production.up.railway.app',
-    // Auth service URL (Node.js/Better Auth)
-    AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'https://auth-service-one-eta.vercel.app',
+    // Auth service URL (Node.js/Better Auth) - Production URL
+    AUTH_SERVICE_URL: 'https://auth-service-one-eta.vercel.app',
   },
 
   presets: [
