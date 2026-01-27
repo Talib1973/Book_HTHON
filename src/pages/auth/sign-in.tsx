@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@theme/Layout';
 import { authClient } from '@site/src/lib/auth-client';
 import styles from '../auth.module.css';
@@ -11,6 +11,12 @@ export default function SignIn() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    console.log('✅ SignIn component mounted');
+    console.log('✅ authClient:', authClient);
+    console.log('✅ authClient.signIn:', authClient.signIn);
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -20,16 +26,24 @@ export default function SignIn() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('🔵 handleSubmit called - preventing default');
     e.preventDefault();
+    e.stopPropagation();
+
+    console.log('🔵 Form data:', formData);
     setError('');
     setLoading(true);
 
     try {
+      console.log('🔵 Calling authClient.signIn.email...');
+
       // Sign in with Better Auth
       const response = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
       });
+
+      console.log('🔵 Got response:', response);
 
       if (response.error) {
         // Handle specific errors
@@ -75,7 +89,7 @@ export default function SignIn() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={styles.authForm}>
+          <form onSubmit={handleSubmit} className={styles.authForm} action="javascript:void(0)">
             <div className={styles.formGroup}>
               <label htmlFor="email" className={styles.formLabel}>
                 Email Address
