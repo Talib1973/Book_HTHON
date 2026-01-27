@@ -7,7 +7,12 @@ export default function AuthNav(): JSX.Element {
 
   // Debug logging
   useEffect(() => {
-    console.log('AuthNav - Session state:', { session, isPending });
+    console.log('=== AuthNav Debug ===');
+    console.log('isPending:', isPending);
+    console.log('session:', session);
+    console.log('session?.user:', session?.user);
+    console.log('Raw session JSON:', JSON.stringify(session, null, 2));
+    console.log('====================');
   }, [session, isPending]);
 
   const handleLogout = async () => {

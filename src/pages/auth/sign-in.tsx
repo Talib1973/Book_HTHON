@@ -43,8 +43,16 @@ export default function SignIn() {
       }
 
       // Success! Redirect to home
-      console.log('Sign in successful:', response);
-      window.location.href = '/';
+      console.log('=== Sign In Success ===');
+      console.log('Full response:', response);
+      console.log('Response data:', response.data);
+      console.log('Response error:', response.error);
+      console.log('=====================');
+
+      // Wait a bit for the session to be set before redirecting
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     } catch (err) {
       console.error('Sign in error:', err);
       setError('An unexpected error occurred. Please try again.');
