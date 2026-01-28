@@ -101,9 +101,22 @@ export default async function handler(req, res) {
     console.log("[Auth Handler] Auth initialized");
 
     // Build Web Request
-    const protocol = req.headers["x-forwarded-proto"] || "https";
-    const host = req.headers.host;
-    const url = `${protocol}://${host}${req.url}`;
+    // Get the original path from query param (set by Vercel rewrite)
+    const urlObj = new URL(req.url, `https://${req.headers.host}`);
+    const pathParam = urlObj.searchParams.get('path');
+    const path = pathParam ? `/api/auth/${pathParam}` : '/api/auth';
+
+    // Remove the path param from search params (it's only for routing)
+    urlObj.searchParams.delete('path');
+    const searchString = urlObj.searchParams.toString();
+    const queryString = searchString ? `?${searchString}` : '';
+
+    const baseURL = process.env.BETTER_AUTH_URL || `https://${req.headers.host}`;
+    const url = `${baseURL}${path}${queryString}`;
+
+    console.log(`[Auth Handler] Original req.url: ${req.url}`);
+    console.log(`[Auth Handler] Path param: ${pathParam}`);
+    console.log(`[Auth Handler] Constructed URL: ${url}`);
 
     const headers = new Headers();
     Object.entries(req.headers).forEach(([key, value]) => {
