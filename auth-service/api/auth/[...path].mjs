@@ -101,21 +101,29 @@ export default async function handler(req, res) {
     console.log("[Auth Handler] Auth initialized");
 
     // Build Web Request
-    // Get the original path from query param (set by Vercel rewrite)
-    const urlObj = new URL(req.url, `https://${req.headers.host}`);
-    const pathParam = urlObj.searchParams.get('path');
-    const path = pathParam ? `/api/auth/${pathParam}` : '/api/auth';
+    // Vercel provides route params in req.query for dynamic routes
+    // For [...path].mjs, req.query.path is an array of path segments
+    const pathSegments = req.query.path || [];
+    const pathArray = Array.isArray(pathSegments) ? pathSegments : [pathSegments];
+    const pathString = pathArray.length > 0 ? `/${pathArray.join('/')}` : '';
+    const fullPath = `/api/auth${pathString}`;
 
-    // Remove the path param from search params (it's only for routing)
-    urlObj.searchParams.delete('path');
-    const searchString = urlObj.searchParams.toString();
-    const queryString = searchString ? `?${searchString}` : '';
+    // Get any other query params (excluding 'path')
+    const urlObj = new URL(req.url, `https://${req.headers.host}`);
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of urlObj.searchParams.entries()) {
+      if (key !== 'path') {
+        queryParams.append(key, value);
+      }
+    }
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
 
     const baseURL = process.env.BETTER_AUTH_URL || `https://${req.headers.host}`;
-    const url = `${baseURL}${path}${queryString}`;
+    const url = `${baseURL}${fullPath}${queryString}`;
 
     console.log(`[Auth Handler] Original req.url: ${req.url}`);
-    console.log(`[Auth Handler] Path param: ${pathParam}`);
+    console.log(`[Auth Handler] Path segments: ${JSON.stringify(pathArray)}`);
+    console.log(`[Auth Handler] Full path: ${fullPath}`);
     console.log(`[Auth Handler] Constructed URL: ${url}`);
 
     const headers = new Headers();

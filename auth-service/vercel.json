@@ -1,13 +1,7 @@
 {
   "functions": {
-    "api/auth.mjs": {
+    "api/auth/[...path].mjs": {
       "runtime": "@vercel/node@3.0.21"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/auth/:path*",
-      "destination": "/api/auth?path=:path*"
-    }
-  ]
+  }
 }
