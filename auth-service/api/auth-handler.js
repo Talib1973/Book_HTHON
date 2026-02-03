@@ -4,70 +4,59 @@
 
 let pool = null;
 let authInstance = null;
-let initError = null;
 
 async function initializeAuth() {
   if (authInstance) return authInstance;
-  if (initError) throw initError;
 
-  try {
-    const pg = await import("pg");
-    const betterAuthMod = await import("better-auth");
-    const { Pool } = pg;
-    const { betterAuth } = betterAuthMod;
+  const pg = await import("pg");
+  const betterAuthMod = await import("better-auth");
+  const { Pool } = pg;
+  const { betterAuth } = betterAuthMod;
 
-    if (!pool) {
-      pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-        max: 1,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000,
-      });
-
-      const client = await pool.connect();
-      await client.query("SELECT NOW()");
-      client.release();
-    }
-
-    const trustedOrigins = (process.env.ALLOWED_ORIGINS || "")
-      .split(",")
-      .map((o) => o.trim())
-      .filter(Boolean);
-
-    // BETTER_AUTH_URL must be the frontend origin (e.g. https://book-hthon.vercel.app)
-    // so session cookies are scoped to the domain the browser talks to via Vercel rewrites.
-    authInstance = betterAuth({
-      database: pool,
-      secret: process.env.BETTER_AUTH_SECRET || "",
-      baseURL: process.env.BETTER_AUTH_URL || "",
-      emailAndPassword: {
-        enabled: true,
-        minPasswordLength: 8,
-      },
-      session: {
-        expiresIn: 60 * 60 * 24 * 7,
-        updateAge: 60 * 60 * 24,
-        cookieCache: {
-          enabled: true,
-          maxAge: 60 * 60 * 24 * 7,
-        },
-      },
-      advanced: {
-        cookiePrefix: "better-auth",
-        useSecureCookies: true,
-        crossSubDomainCookies: {
-          enabled: false,
-        },
-      },
-      trustedOrigins,
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 1,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
     });
-
-    return authInstance;
-  } catch (error) {
-    initError = error;
-    throw error;
   }
+
+  const trustedOrigins = (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  // BETTER_AUTH_URL must be the frontend origin (e.g. https://book-hthon.vercel.app)
+  // so session cookies are scoped to the domain the browser talks to via Vercel rewrites.
+  authInstance = betterAuth({
+    database: pool,
+    secret: process.env.BETTER_AUTH_SECRET || "",
+    baseURL: process.env.BETTER_AUTH_URL || "",
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 8,
+    },
+    session: {
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 60 * 24 * 7,
+      },
+    },
+    advanced: {
+      cookiePrefix: "better-auth",
+      useSecureCookies: true,
+      crossSubDomainCookies: {
+        enabled: false,
+      },
+    },
+    trustedOrigins,
+  });
+
+  return authInstance;
 }
 
 // Raw .js files on Vercel don't get automatic body parsing.
