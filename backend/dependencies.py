@@ -9,8 +9,11 @@ AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:3001")
 async def get_current_user(request: Request):
     """Validate session by calling auth-service and return user ID."""
 
-    # Get session cookie from request
-    session_token = request.cookies.get("better-auth.session_token")
+    # Cookie name differs: __Secure- prefix when useSecureCookies is enabled (production).
+    session_token = (
+        request.cookies.get("__Secure-better-auth.session_token")
+        or request.cookies.get("better-auth.session_token")
+    )
 
     if not session_token:
         raise HTTPException(
@@ -23,7 +26,7 @@ async def get_current_user(request: Request):
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{AUTH_SERVICE_URL}/api/auth/get-session",
-                cookies={"better-auth.session_token": session_token},
+                cookies={"__Secure-better-auth.session_token": session_token},
                 timeout=5.0
             )
 

@@ -94,19 +94,14 @@ class ErrorResponse(BaseModel):
 
 class ProfileRequest(BaseModel):
     """Request model for creating/updating user profile."""
-    programming_experience: Literal["beginner", "intermediate", "advanced"] = Field(
-        ...,
-        description="User's programming skill level"
-    )
-    hardware_access: list[str] = Field(
-        default_factory=list,
-        max_length=20,
-        description="List of hardware platforms user has access to"
-    )
-    learning_goal: Literal["theory", "implementation", "both"] = Field(
-        ...,
-        description="User's primary learning objective"
-    )
+    python_experience: Literal["beginner", "intermediate", "advanced"] = "beginner"
+    ros_experience: Literal["none", "beginner", "intermediate", "advanced"] = "none"
+    has_rtx_gpu: bool = False
+    gpu_model: Optional[str] = None
+    has_jetson: bool = False
+    jetson_model: Optional[str] = None
+    robot_type: Optional[str] = None
+    learning_goals: list[str] = Field(default_factory=list, max_length=10)
 
 
 class ProfileResponse(BaseModel):
@@ -117,9 +112,14 @@ class ProfileResponse(BaseModel):
 
 class UserProfile(BaseModel):
     """User profile data model."""
-    programming_experience: str
-    hardware_access: list[str]
-    learning_goal: str
+    python_experience: str
+    ros_experience: str
+    has_rtx_gpu: bool
+    gpu_model: Optional[str]
+    has_jetson: bool
+    jetson_model: Optional[str]
+    robot_type: Optional[str]
+    learning_goals: list[str]
     created_at: str
     updated_at: str
 
@@ -351,19 +351,33 @@ async def create_profile(
         # Insert or update user profile (upsert)
         await db.execute(
             '''
-            INSERT INTO user_profile (user_id, programming_experience, hardware_access, learning_goal)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO user_profile (
+                user_id, python_experience, ros_experience,
+                has_rtx_gpu, gpu_model, has_jetson, jetson_model,
+                robot_type, learning_goals
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             ON CONFLICT (user_id)
             DO UPDATE SET
-                programming_experience = EXCLUDED.programming_experience,
-                hardware_access = EXCLUDED.hardware_access,
-                learning_goal = EXCLUDED.learning_goal,
+                python_experience = EXCLUDED.python_experience,
+                ros_experience = EXCLUDED.ros_experience,
+                has_rtx_gpu = EXCLUDED.has_rtx_gpu,
+                gpu_model = EXCLUDED.gpu_model,
+                has_jetson = EXCLUDED.has_jetson,
+                jetson_model = EXCLUDED.jetson_model,
+                robot_type = EXCLUDED.robot_type,
+                learning_goals = EXCLUDED.learning_goals,
                 updated_at = CURRENT_TIMESTAMP
             ''',
             user_id,
-            request.programming_experience,
-            request.hardware_access,
-            request.learning_goal
+            request.python_experience,
+            request.ros_experience,
+            request.has_rtx_gpu,
+            request.gpu_model,
+            request.has_jetson,
+            request.jetson_model,
+            request.robot_type,
+            request.learning_goals,
         )
 
         return ProfileResponse(
@@ -414,7 +428,9 @@ async def get_profile(user_id: str = Depends(get_current_user)) -> UserProfile:
     try:
         profile = await db.fetch_one(
             '''
-            SELECT programming_experience, hardware_access, learning_goal, created_at, updated_at
+            SELECT python_experience, ros_experience, has_rtx_gpu, gpu_model,
+                   has_jetson, jetson_model, robot_type, learning_goals,
+                   created_at, updated_at
             FROM user_profile
             WHERE user_id = $1
             ''',
@@ -432,9 +448,14 @@ async def get_profile(user_id: str = Depends(get_current_user)) -> UserProfile:
             )
 
         return UserProfile(
-            programming_experience=profile['programming_experience'],
-            hardware_access=profile['hardware_access'],
-            learning_goal=profile['learning_goal'],
+            python_experience=profile['python_experience'],
+            ros_experience=profile['ros_experience'],
+            has_rtx_gpu=profile['has_rtx_gpu'],
+            gpu_model=profile['gpu_model'],
+            has_jetson=profile['has_jetson'],
+            jetson_model=profile['jetson_model'],
+            robot_type=profile['robot_type'],
+            learning_goals=profile['learning_goals'] or [],
             created_at=profile['created_at'].isoformat(),
             updated_at=profile['updated_at'].isoformat()
         )
