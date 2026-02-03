@@ -98,8 +98,8 @@ export default function PersonalizeButton(): React.ReactNode {
   // Not logged in — show sign-in prompt
   if (!session?.user) {
     return (
-      <div style={styles.container}>
-        <button style={styles.buttonOutline} onClick={() => { window.location.href = '/auth/sign-in'; }}>
+      <div className="personalize-container">
+        <button className="personalize-btn" onClick={() => { window.location.href = '/auth/sign-in'; }}>
           Sign in to personalize this chapter
         </button>
       </div>
@@ -107,10 +107,10 @@ export default function PersonalizeButton(): React.ReactNode {
   }
 
   return (
-    <div style={styles.container}>
-      {error && <p style={styles.error}>{error}</p>}
+    <div className="personalize-container">
+      {error && <p className="personalize-error">{error}</p>}
       <button
-        style={personalized ? styles.buttonActive : styles.buttonOutline}
+        className={`personalize-btn${personalized ? ' personalize-btn--active' : ''}`}
         onClick={handlePersonalize}
         disabled={loading}
       >
@@ -119,40 +119,3 @@ export default function PersonalizeButton(): React.ReactNode {
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    margin: '1rem 0',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    flexWrap: 'wrap',
-  },
-  buttonOutline: {
-    padding: '0.5rem 1rem',
-    border: '2px solid var(--ifm-color-primary)',
-    borderRadius: '6px',
-    background: 'transparent',
-    color: 'var(--ifm-color-primary)',
-    fontWeight: 600,
-    fontSize: '0.9rem',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  buttonActive: {
-    padding: '0.5rem 1rem',
-    border: '2px solid var(--ifm-color-primary)',
-    borderRadius: '6px',
-    background: 'var(--ifm-color-primary)',
-    color: '#fff',
-    fontWeight: 600,
-    fontSize: '0.9rem',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  error: {
-    color: 'var(--ifm-color-danger)',
-    fontSize: '0.85rem',
-    margin: 0,
-  },
-};

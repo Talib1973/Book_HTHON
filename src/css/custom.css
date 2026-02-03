@@ -17,6 +17,95 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
+/* ── Personalization Button ── */
+.personalize-container {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.personalize-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.personalize-btn:hover {
+  background: var(--ifm-color-primary-lightest);
+}
+
+.personalize-btn--active {
+  background: var(--ifm-color-primary);
+  color: #fff;
+}
+
+.personalize-btn--active:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+.personalize-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.personalize-error {
+  color: var(--ifm-color-danger);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ── Personalization Content Markers ── */
+/* Authors wrap content in these classes to enable profile-based filtering.
+   The PersonalizationEngine toggles visibility at runtime. */
+.advanced-tip {
+  border-left: 3px solid var(--ifm-color-primary);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+  background: var(--ifm-color-primary-lightest);
+  border-radius: 0 4px 4px 0;
+}
+
+.beginner-note {
+  border-left: 3px solid var(--ifm-color-warning);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+  background: var(--ifm-color-warning-lightest);
+  border-radius: 0 4px 4px 0;
+}
+
+.ros-advanced {
+  border-left: 3px solid var(--ifm-color-info);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+  background: var(--ifm-color-info-lightest);
+  border-radius: 0 4px 4px 0;
+}
+
+.gpu-required {
+  border-left: 3px solid var(--ifm-color-emphasis-600);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 0 4px 4px 0;
+}
+
+.gpu-alternative {
+  border-left: 3px solid var(--ifm-color-success);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0;
+  background: var(--ifm-color-success-lightest);
+  border-radius: 0 4px 4px 0;
+  display: none; /* shown only when user has no GPU and personalization is active */
+}
+
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;
