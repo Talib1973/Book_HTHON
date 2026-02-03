@@ -8,10 +8,6 @@
     {
       "source": "/api/auth/:path*",
       "destination": "https://auth-service-one-eta.vercel.app/api/auth/:path*"
-    },
-    {
-      "source": "/api/profile",
-      "destination": "https://victorious-presence-production.up.railway.app/profile"
     }
   ]
 }
