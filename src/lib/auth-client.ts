@@ -6,8 +6,6 @@ const AUTH_SERVICE_URL = typeof window !== 'undefined'
   ? `${window.location.origin}/api/auth`
   : "https://book-hthon.vercel.app/api/auth";
 
-console.log("🔐 Auth client initialized with base URL:", AUTH_SERVICE_URL);
-
 export const authClient = createAuthClient({
   baseURL: AUTH_SERVICE_URL,
   fetchOptions: {

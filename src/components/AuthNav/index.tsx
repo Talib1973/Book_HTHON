@@ -1,30 +1,19 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSession, authClient } from '@site/src/lib/auth-client';
 import styles from './styles.module.css';
 
 export default function AuthNav(): JSX.Element {
   const { data: session, isPending } = useSession();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('=== AuthNav Debug ===');
-    console.log('isPending:', isPending);
-    console.log('session:', session);
-    console.log('session?.user:', session?.user);
-    console.log('Raw session JSON:', JSON.stringify(session, null, 2));
-    console.log('====================');
-  }, [session, isPending]);
-
   const handleLogout = async () => {
     await authClient.signOut();
     window.location.href = '/';
   };
 
-  // Show loading state while checking session
   if (isPending) {
     return (
       <div className={styles.authNav}>
-        <span className={styles.authLink}>Loading...</span>
+        <span className={styles.authLink}>...</span>
       </div>
     );
   }
@@ -33,7 +22,7 @@ export default function AuthNav(): JSX.Element {
     return (
       <div className={styles.authNav}>
         <span className={styles.profileLink}>
-          {session.user.email || session.user.name || 'User'}
+          {session.user.name || session.user.email || 'User'}
         </span>
         <button onClick={handleLogout} className={styles.logoutButton}>
           Sign Out

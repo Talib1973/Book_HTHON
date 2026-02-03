@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from '@theme/Layout';
 import { authClient } from '@site/src/lib/auth-client';
 import styles from '../auth.module.css';
@@ -11,64 +11,33 @@ export default function SignIn() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    console.log('✅ SignIn component mounted');
-    console.log('✅ authClient:', authClient);
-    console.log('✅ authClient.signIn:', authClient.signIn);
-  }, []);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError(''); // Clear error on input change
+    setError('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    console.log('🔵 handleSubmit called - preventing default');
-    e.preventDefault();
-    e.stopPropagation();
-
-    console.log('🔵 Form data:', formData);
+  const handleSubmit = async () => {
     setError('');
     setLoading(true);
 
     try {
-      console.log('🔵 Calling authClient.signIn.email...');
-
-      // Sign in with Better Auth
       const response = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
       });
 
-      console.log('🔵 Got response:', response);
-
       if (response.error) {
-        // Handle specific errors
-        if (response.error.message?.includes('Invalid')) {
-          setError('Invalid email or password. Please try again.');
-        } else {
-          setError(response.error.message || 'Failed to sign in. Please try again.');
-        }
+        setError(response.error.message || 'Failed to sign in. Please try again.');
         setLoading(false);
         return;
       }
 
-      // Success! Redirect to home
-      console.log('=== Sign In Success ===');
-      console.log('Full response:', response);
-      console.log('Response data:', response.data);
-      console.log('Response error:', response.error);
-      console.log('=====================');
-
-      // Wait a bit for the session to be set before redirecting
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
+      // Session cookie is set — redirect to home
+      window.location.href = '/';
     } catch (err) {
-      console.error('Sign in error:', err);
       setError('An unexpected error occurred. Please try again.');
       setLoading(false);
     }
@@ -89,7 +58,7 @@ export default function SignIn() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={styles.authForm} action="javascript:void(0)">
+          <form className={styles.authForm} onSubmit={(e) => e.preventDefault()}>
             <div className={styles.formGroup}>
               <label htmlFor="email" className={styles.formLabel}>
                 Email Address
@@ -126,10 +95,7 @@ export default function SignIn() {
 
             <button
               type="button"
-              onClick={(e) => {
-                console.log('🟢 Button clicked!');
-                handleSubmit(e as any);
-              }}
+              onClick={handleSubmit}
               className={styles.submitButton}
               disabled={loading}
             >
