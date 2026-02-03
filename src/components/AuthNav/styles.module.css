@@ -43,6 +43,19 @@
   color: var(--ifm-navbar-link-hover-color);
 }
 
+.settingsLink {
+  padding: 0.5rem 0.75rem;
+  color: var(--ifm-navbar-link-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.settingsLink:hover {
+  color: var(--ifm-navbar-link-hover-color);
+  text-decoration: underline;
+}
+
 .logoutButton {
   padding: 0.5rem 1rem;
   background: transparent;

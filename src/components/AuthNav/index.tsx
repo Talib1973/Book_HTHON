@@ -25,6 +25,9 @@ export default function AuthNav(): JSX.Element {
         <span className={styles.profileLink}>
           {session.user.name || session.user.email || 'User'}
         </span>
+        <a href="/profile/settings" className={styles.settingsLink}>
+          Settings
+        </a>
         <button onClick={handleLogout} className={styles.logoutButton}>
           Sign Out
         </button>
