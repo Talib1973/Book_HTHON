@@ -37,6 +37,18 @@ This 13-week course covers the complete robotics stack from foundational middlew
 - Familiarity with machine learning frameworks (PyTorch or TensorFlow)
 - Understanding of computer vision basics
 
+<div class="beginner-note">
+
+**New to Python?** Don't worry — each module includes step-by-step walkthroughs. Start by reviewing [Python basics](https://docs.python.org/3/tutorial/) before diving into ROS 2. Focus on functions, classes, and list comprehensions first.
+
+</div>
+
+<div class="advanced-tip">
+
+**Tip for experienced developers:** You can skip the Python fundamentals in Module 1 and jump straight to the ROS 2 node lifecycle and async executor patterns. See the "Advanced Track" sidebar in each week for condensed content.
+
+</div>
+
 ## Course Structure
 
 ### Module 1: The Robotic Nervous System (ROS 2)
@@ -47,6 +59,23 @@ This 13-week course covers the complete robotics stack from foundational middlew
 
 ### Module 3: NVIDIA Isaac Sim
 **Weeks 8-10** - Leverage GPU-accelerated simulation and synthetic data generation for AI training.
+
+<div class="gpu-required">
+
+**Local GPU Setup:** If you have an RTX GPU, install NVIDIA Isaac Sim locally for the best performance. Follow the [Isaac Sim installation guide](https://developer.nvidia.com/isaac-sim) and ensure your driver is up to date. RTX 3060 or above is recommended.
+
+</div>
+<div class="gpu-alternative">
+
+**No GPU? No problem:** You can complete all Isaac Sim labs using NVIDIA's cloud-based Isaac Sim instance. Sign up at [NGC](https://ngc.nvidia.com) for free cloud compute credits. All exercises are designed to run within the free tier.
+
+</div>
+
+<div class="ros-advanced">
+
+**ROS 2 Integration with Isaac:** For users comfortable with ROS 2, Module 3 includes advanced tutorials on bridging Isaac Sim with ROS 2 via the `ros2_isaac` bridge package. You'll set up domain randomization pipelines that publish directly to ROS topics.
+
+</div>
 
 ### Module 4: Vision-Language-Action (VLA)
 **Weeks 11-13** - Implement state-of-the-art VLA models (RT-1, RT-2, PaLM-E) for robotic manipulation.
