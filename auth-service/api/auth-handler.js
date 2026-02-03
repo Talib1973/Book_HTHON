@@ -70,6 +70,17 @@ async function initializeAuth() {
   }
 }
 
+// Raw .js files on Vercel don't get automatic body parsing.
+// Collect the raw POST body from the stream.
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
+}
+
 module.exports = async function handler(req, res) {
   try {
     // CORS
@@ -112,8 +123,9 @@ module.exports = async function handler(req, res) {
     });
 
     let body = undefined;
-    if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
-      body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      const raw = await readBody(req);
+      if (raw) body = raw;
     }
 
     const webRequest = new Request(url, {
@@ -125,12 +137,19 @@ module.exports = async function handler(req, res) {
     // Delegate to Better Auth
     const webResponse = await auth.handler(webRequest);
 
-    // Forward response headers (skip CORS — already set above)
+    // Forward response headers (skip CORS — already set above).
+    // set-cookie must be handled separately: Headers combines multiple values
+    // with commas, but set-cookie headers cannot be combined that way.
     webResponse.headers.forEach((value, key) => {
+      if (key.toLowerCase() === "set-cookie") return; // handled below
       if (!key.toLowerCase().startsWith("access-control-")) {
         res.setHeader(key, value);
       }
     });
+    const cookies = webResponse.headers.getSetCookie();
+    if (cookies.length > 0) {
+      res.setHeader("set-cookie", cookies);
+    }
 
     const responseBody = await webResponse.text();
     res.status(webResponse.status).send(responseBody);
