@@ -7,6 +7,7 @@ export default function AuthNav(): JSX.Element {
 
   const handleLogout = async () => {
     await authClient.signOut();
+    localStorage.removeItem('ba_profile_cache');
     window.location.href = '/';
   };
 
