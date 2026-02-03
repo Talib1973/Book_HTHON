@@ -1,7 +1,8 @@
 {
-  "functions": {
-    "api/auth/[...path].ts": {
-      "runtime": "@vercel/node@3.0.21"
+  "rewrites": [
+    {
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth-handler"
     }
-  }
+  ]
 }

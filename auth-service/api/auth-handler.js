@@ -1,17 +1,20 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+// Single handler for all /api/auth/* routes.
+// Vercel rewrites send all /api/auth/:path* here; req.url preserves the original path.
+// CJS with dynamic import() for better-auth (ESM-only package).
 
-// Cached across invocations within the same serverless instance
-let pool: any = null;
-let authInstance: any = null;
-let initError: Error | null = null;
+let pool = null;
+let authInstance = null;
+let initError = null;
 
 async function initializeAuth() {
   if (authInstance) return authInstance;
   if (initError) throw initError;
 
   try {
-    const { Pool } = await import("pg");
-    const { betterAuth } = await import("better-auth");
+    const pg = await import("pg");
+    const betterAuthMod = await import("better-auth");
+    const { Pool } = pg;
+    const { betterAuth } = betterAuthMod;
 
     if (!pool) {
       pool = new Pool({
@@ -29,12 +32,11 @@ async function initializeAuth() {
 
     const trustedOrigins = (process.env.ALLOWED_ORIGINS || "")
       .split(",")
-      .map((o: string) => o.trim())
+      .map((o) => o.trim())
       .filter(Boolean);
 
-    // IMPORTANT: BETTER_AUTH_URL must be set to the FRONTEND domain
-    // (e.g. https://book-hthon.vercel.app) so cookies are scoped correctly
-    // when the main site proxies /api/auth/* via Vercel rewrites.
+    // BETTER_AUTH_URL must be the frontend origin (e.g. https://book-hthon.vercel.app)
+    // so session cookies are scoped to the domain the browser talks to via Vercel rewrites.
     authInstance = betterAuth({
       database: pool,
       secret: process.env.BETTER_AUTH_SECRET || "",
@@ -44,8 +46,8 @@ async function initializeAuth() {
         minPasswordLength: 8,
       },
       session: {
-        expiresIn: 60 * 60 * 24 * 7, // 7 days
-        updateAge: 60 * 60 * 24, // refresh once per day
+        expiresIn: 60 * 60 * 24 * 7,
+        updateAge: 60 * 60 * 24,
         cookieCache: {
           enabled: true,
           maxAge: 60 * 60 * 24 * 7,
@@ -63,19 +65,19 @@ async function initializeAuth() {
 
     return authInstance;
   } catch (error) {
-    initError = error as Error;
+    initError = error;
     throw error;
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   try {
     // CORS
     const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
       .split(",")
-      .map((o: string) => o.trim())
+      .map((o) => o.trim())
       .filter(Boolean);
-    const origin = (req.headers.origin as string) || "";
+    const origin = req.headers.origin || "";
 
     if (allowedOrigins.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
@@ -90,32 +92,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const auth = await initializeAuth();
 
-    // Reconstruct path from Vercel catch-all param
-    const pathSegments = req.query.path || [];
-    const pathArray = Array.isArray(pathSegments) ? pathSegments : [pathSegments];
-    const pathString = pathArray.length > 0 ? `/${pathArray.join("/")}` : "";
-    const fullPath = `/api/auth${pathString}`;
-
-    // Preserve non-path query params
+    // Extract path from the original URL (rewrites preserve req.url).
+    // req.url looks like "/api/auth/sign-in/email?foo=bar"
     const urlObj = new URL(req.url || "/", `https://${req.headers.host}`);
-    const queryParams = new URLSearchParams();
-    for (const [key, value] of urlObj.searchParams.entries()) {
-      if (key !== "path") {
-        queryParams.append(key, value);
-      }
+    let pathname = urlObj.pathname; // e.g. /api/auth/sign-in/email
+
+    // Better Auth 1.4.x: server endpoint is /get-session but client SDK calls /session.
+    if (pathname === "/api/auth/session") {
+      pathname = "/api/auth/get-session";
     }
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
     const baseURL = process.env.BETTER_AUTH_URL || `https://${req.headers.host}`;
-    const url = `${baseURL}${fullPath}${queryString}`;
+    const url = `${baseURL}${pathname}${urlObj.search}`;
 
-    // Build Web API Request from the incoming Vercel request
+    // Build Web API Request
     const headers = new Headers();
     Object.entries(req.headers).forEach(([key, value]) => {
       if (value) headers.set(key, Array.isArray(value) ? value.join(", ") : String(value));
     });
 
-    let body: string | undefined;
+    let body = undefined;
     if (req.method !== "GET" && req.method !== "HEAD" && req.body) {
       body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
     }
@@ -129,8 +125,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Delegate to Better Auth
     const webResponse = await auth.handler(webRequest);
 
-    // Forward response headers (skip CORS — already set)
-    webResponse.headers.forEach((value: string, key: string) => {
+    // Forward response headers (skip CORS — already set above)
+    webResponse.headers.forEach((value, key) => {
       if (!key.toLowerCase().startsWith("access-control-")) {
         res.setHeader(key, value);
       }
@@ -142,7 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error("[Auth] Handler error:", error);
     return res.status(500).json({
       error: "Authentication service error",
-      message: error instanceof Error ? error.message : "Unknown error",
+      message: error.message || "Unknown error",
     });
   }
-}
+};
