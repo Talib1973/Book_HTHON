@@ -140,9 +140,11 @@ export default function SignUp() {
             Join us to get personalized robotics learning content
           </p>
 
-          {error && <div className={styles.errorMessage}>{error}</div>}
+          <div className={styles.errorMessage} aria-live="polite" role="alert" style={error ? {} : { display: 'none' }}>
+            {error}
+          </div>
 
-          <form onSubmit={handleSubmit} className={styles.authForm}>
+          <form onSubmit={handleSubmit} className={styles.authForm} aria-label="Sign up form">
             {/* ── Account Info ── */}
             <div className={styles.formSection}>
               <h3>Account Information</h3>

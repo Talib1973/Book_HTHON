@@ -52,13 +52,11 @@ export default function SignIn() {
             Sign in to continue your robotics learning journey
           </p>
 
-          {error && (
-            <div className={styles.errorMessage}>
-              {error}
-            </div>
-          )}
+          <div className={styles.errorMessage} aria-live="polite" role="alert" style={error ? {} : { display: 'none' }}>
+            {error}
+          </div>
 
-          <form className={styles.authForm} onSubmit={(e) => e.preventDefault()}>
+          <form className={styles.authForm} onSubmit={(e) => e.preventDefault()} aria-label="Sign in form">
             <div className={styles.formGroup}>
               <label htmlFor="email" className={styles.formLabel}>
                 Email Address

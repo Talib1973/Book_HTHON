@@ -99,7 +99,8 @@ export default function PersonalizeButton(): React.ReactNode {
   if (!session?.user) {
     return (
       <div className="personalize-container">
-        <button className="personalize-btn" onClick={() => { window.location.href = '/auth/sign-in'; }}>
+        <button className="personalize-btn" aria-label="Sign in to personalize this chapter"
+            onClick={() => { window.location.href = '/auth/sign-in'; }}>
           Sign in to personalize this chapter
         </button>
       </div>
@@ -111,6 +112,8 @@ export default function PersonalizeButton(): React.ReactNode {
       {error && <p className="personalize-error">{error}</p>}
       <button
         className={`personalize-btn${personalized ? ' personalize-btn--active' : ''}`}
+        aria-label={personalized ? 'Revert chapter to default content' : 'Personalize this chapter based on your profile'}
+        aria-pressed={personalized}
         onClick={handlePersonalize}
         disabled={loading}
       >
