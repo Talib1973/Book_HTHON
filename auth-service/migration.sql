@@ -57,17 +57,38 @@ CREATE INDEX IF NOT EXISTS idx_session_token ON session(token);
 CREATE INDEX IF NOT EXISTS idx_account_user_id ON account("userId");
 CREATE INDEX IF NOT EXISTS idx_verification_identifier ON verification(identifier);
 
--- User profile table (custom for your app)
+-- User profile table (custom for personalization)
 CREATE TABLE IF NOT EXISTS user_profile (
     user_id TEXT PRIMARY KEY REFERENCES "user"(id) ON DELETE CASCADE,
-    programming_experience TEXT NOT NULL CHECK (programming_experience IN ('beginner', 'intermediate', 'advanced')),
-    hardware_access TEXT[] NOT NULL DEFAULT '{}',
-    learning_goal TEXT NOT NULL CHECK (learning_goal IN ('theory', 'implementation', 'both')),
+    python_experience TEXT CHECK (python_experience IN ('beginner', 'intermediate', 'advanced')) DEFAULT 'beginner',
+    ros_experience TEXT CHECK (ros_experience IN ('none', 'beginner', 'intermediate', 'advanced')) DEFAULT 'none',
+    has_rtx_gpu BOOLEAN NOT NULL DEFAULT FALSE,
+    gpu_model TEXT,
+    has_jetson BOOLEAN NOT NULL DEFAULT FALSE,
+    jetson_model TEXT,
+    robot_type TEXT,
+    learning_goals TEXT[] DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_profile_user_id ON user_profile(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profile_python_exp ON user_profile(python_experience);
+CREATE INDEX IF NOT EXISTS idx_user_profile_ros_exp ON user_profile(ros_experience);
+
+-- Migration: drop old columns if they exist, add new ones
+-- Run this if user_profile already existed with the old schema:
+-- ALTER TABLE user_profile DROP COLUMN IF EXISTS programming_experience;
+-- ALTER TABLE user_profile DROP COLUMN IF EXISTS hardware_access;
+-- ALTER TABLE user_profile DROP COLUMN IF EXISTS learning_goal;
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS python_experience TEXT CHECK (python_experience IN ('beginner', 'intermediate', 'advanced')) DEFAULT 'beginner';
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS ros_experience TEXT CHECK (ros_experience IN ('none', 'beginner', 'intermediate', 'advanced')) DEFAULT 'none';
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS has_rtx_gpu BOOLEAN NOT NULL DEFAULT FALSE;
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS gpu_model TEXT;
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS has_jetson BOOLEAN NOT NULL DEFAULT FALSE;
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS jetson_model TEXT;
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS robot_type TEXT;
+-- ALTER TABLE user_profile ADD COLUMN IF NOT EXISTS learning_goals TEXT[] DEFAULT '{}';
 
 -- Success message
 SELECT 'Better Auth tables created successfully!' AS status;
