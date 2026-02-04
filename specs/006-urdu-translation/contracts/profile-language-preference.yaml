@@ -1,0 +1,136 @@
+# Contract: Language Preference via Profile API
+#
+# This is an EXTENSION of the existing GET/POST /api/profile contract.
+# No new endpoints. One new field added to both request and response.
+# Fully backward-compatible: if language_preference is omitted in POST,
+# the server preserves the existing value (or defaults to 'en').
+
+openapi: "3.0.3"
+info:
+  title: Profile API — Language Preference Extension
+  version: "1.1.0"
+  description: |
+    Extends the existing /api/profile endpoint with a language_preference
+    field. GET returns the stored value. POST accepts and persists it.
+
+paths:
+  /api/profile:
+    get:
+      summary: Get user profile (includes language preference)
+      security:
+        - cookieAuth: []   # __Secure-better-auth.session_token (existing)
+      responses:
+        "200":
+          description: Full user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+        "401":
+          description: Not authenticated
+    post:
+      summary: Save user profile (includes language preference)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileRequest"
+      responses:
+        "201":
+          description: Profile saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "401":
+          description: Not authenticated
+
+components:
+  schemas:
+    ProfileRequest:
+      type: object
+      properties:
+        python_experience:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        ros_experience:
+          type: string
+          enum: ["none", beginner, intermediate, advanced]
+        has_rtx_gpu:
+          type: boolean
+        gpu_model:
+          type: string
+          nullable: true
+        has_jetson:
+          type: boolean
+        jetson_model:
+          type: string
+          nullable: true
+        robot_type:
+          type: string
+          nullable: true
+        learning_goals:
+          type: array
+          items:
+            type: string
+        # ── NEW FIELD ──
+        language_preference:
+          type: string
+          enum: [en, ur]
+          default: en
+          description: |
+            User's preferred reading language. Omit to leave unchanged.
+            Defaults to 'en' on first profile creation.
+
+    ProfileResponse:
+      type: object
+      required:
+        - python_experience
+        - ros_experience
+      properties:
+        python_experience:
+          type: string
+        ros_experience:
+          type: string
+        has_rtx_gpu:
+          type: boolean
+        gpu_model:
+          type: string
+          nullable: true
+        has_jetson:
+          type: boolean
+        jetson_model:
+          type: string
+          nullable: true
+        robot_type:
+          type: string
+          nullable: true
+        learning_goals:
+          type: array
+          items:
+            type: string
+        # ── NEW FIELD ──
+        language_preference:
+          type: string
+          enum: [en, ur]
+          description: Current language preference. Always present in response.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: __Secure-better-auth.session_token

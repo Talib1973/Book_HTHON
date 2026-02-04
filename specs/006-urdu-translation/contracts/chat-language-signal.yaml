@@ -1,0 +1,97 @@
+# Contract: Chat API — Language Signal Extension
+#
+# Extends the existing POST /api/chat request with an optional
+# `language` field. Fully backward-compatible: omitting the field
+# defaults to English ('en') behaviour, identical to current.
+#
+# No changes to vector retrieval, embeddings, or Qdrant queries.
+# Language handling is applied at the LLM prompt layer only.
+
+openapi: "3.0.3"
+info:
+  title: Chat API — Language Signal Extension
+  version: "1.1.0"
+  description: |
+    Adds an optional `language` field to the chat request.
+    When set to 'ur', the LLM is instructed to respond in Urdu
+    while keeping code, commands, and paths in English.
+
+paths:
+  /api/chat:
+    post:
+      summary: Send a chat message (with optional language)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+        "422":
+          description: Validation error
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The user's question or message.
+        selected_text:
+          type: string
+          nullable: true
+          description: Optional text the user selected before opening the chat.
+        # ── NEW FIELD ──
+        language:
+          type: string
+          enum: [en, ur]
+          default: en
+          description: |
+            Target response language. Omit or set to 'en' for English
+            (current default behaviour). Set to 'ur' to instruct the
+            LLM to respond in Urdu. Code, commands, file paths, and
+            URLs in the response will remain in English regardless.
+
+    ChatResponse:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: The chatbot's response text (in the requested language).
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        error:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            message:
+              type: string
+            retryable:
+              type: boolean
+
+    Citation:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+        snippet:
+          type: string
+          description: |
+            Short excerpt from the source. Always in English
+            (sourced from the English vector index) regardless
+            of response language.
