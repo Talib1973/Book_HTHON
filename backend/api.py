@@ -61,6 +61,10 @@ class ChatRequest(BaseModel):
         description="Optional selected text from textbook page for context-aware answers",
         examples=["ROS 2 is the second generation of the Robot Operating System..."]
     )
+    language: str = Field(
+        "en",
+        description="Target response language: 'en' (default) or 'ur'. Backward-compatible — omit for English."
+    )
 
 
 class Citation(BaseModel):
@@ -267,10 +271,22 @@ async def chat_endpoint(request: ChatRequest) -> ChatResponse:
         )
 
     try:
+        # Prepend Urdu language instruction when requested (T021)
+        language_prefix = ""
+        if request.language == "ur":
+            language_prefix = (
+                "[LANGUAGE INSTRUCTION] Respond in Urdu. "
+                "If your answer includes code snippets, commands, file paths, or URLs, "
+                "keep those in English.\n\n"
+            )
+
         # Prepare query (append context if provided)
         query = request.message.strip()
         if request.context:
             query = f"{query}\n\nContext: {request.context.strip()}"
+
+        # Apply language prefix (placed before user query for system-level priority)
+        query = f"{language_prefix}{query}"
 
         # Run agent with session memory (async)
         result = await Runner.run(agent_instance, query, session=session)

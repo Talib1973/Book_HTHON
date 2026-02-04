@@ -116,12 +116,15 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: "Invalid JSON" });
       }
 
-      await db.query(
-        `INSERT INTO user_profile (
+      // If language_preference is provided, include it; otherwise preserve existing value
+      const langPref = body.language_preference;
+      const hasLangPref = langPref === "en" || langPref === "ur";
+
+      const baseQuery = `INSERT INTO user_profile (
            user_id, python_experience, ros_experience,
            has_rtx_gpu, gpu_model, has_jetson, jetson_model,
-           robot_type, learning_goals
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           robot_type, learning_goals${hasLangPref ? ", language_preference" : ""}
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9${hasLangPref ? ", $10" : ""})
          ON CONFLICT (user_id) DO UPDATE SET
            python_experience = EXCLUDED.python_experience,
            ros_experience    = EXCLUDED.ros_experience,
@@ -130,20 +133,27 @@ module.exports = async function handler(req, res) {
            has_jetson        = EXCLUDED.has_jetson,
            jetson_model      = EXCLUDED.jetson_model,
            robot_type        = EXCLUDED.robot_type,
-           learning_goals    = EXCLUDED.learning_goals,
-           updated_at        = CURRENT_TIMESTAMP`,
-        [
-          userId,
-          body.python_experience || "beginner",
-          body.ros_experience || "none",
-          body.has_rtx_gpu === true,
-          body.gpu_model || null,
-          body.has_jetson === true,
-          body.jetson_model || null,
-          body.robot_type || null,
-          body.learning_goals || [],
-        ]
-      );
+           learning_goals    = EXCLUDED.learning_goals,${
+             hasLangPref
+               ? "\n           language_preference = EXCLUDED.language_preference,"
+               : ""
+           }
+           updated_at        = CURRENT_TIMESTAMP`;
+
+      const params = [
+        userId,
+        body.python_experience || "beginner",
+        body.ros_experience || "none",
+        body.has_rtx_gpu === true,
+        body.gpu_model || null,
+        body.has_jetson === true,
+        body.jetson_model || null,
+        body.robot_type || null,
+        body.learning_goals || [],
+      ];
+      if (hasLangPref) params.push(langPref);
+
+      await db.query(baseQuery, params);
 
       return res.status(201).json({ success: true, message: "Profile saved" });
     }

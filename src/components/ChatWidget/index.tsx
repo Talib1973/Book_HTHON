@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ChatRequest, ChatResponse, ErrorResponse } from '../../types/chat';
 import { isErrorResponse } from '../../types/chat';
+import { getCurrentLanguage } from '../../lib/languageState';
 import styles from './styles.module.css';
 
 /**
@@ -74,6 +75,7 @@ export default function ChatWidget(): JSX.Element {
     try {
       const requestBody: ChatRequest = {
         message: input.trim(),
+        language: getCurrentLanguage(),
       };
 
       const response = await fetch(API_URL, {

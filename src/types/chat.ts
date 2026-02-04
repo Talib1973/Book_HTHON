@@ -14,6 +14,9 @@ export interface ChatRequest {
 
   /** Optional selected text from textbook for context (max 5000 characters) */
   context?: string | null;
+
+  /** Target response language: 'en' (default) or 'ur'. Omit for English. */
+  language?: string;
 }
 
 /**
