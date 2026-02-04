@@ -106,6 +106,26 @@
   display: none; /* shown only when user has no GPU and personalization is active */
 }
 
+/* ── Urdu RTL container (global fallback styles) ── */
+.urduContent {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Nastaliq', 'Urdu Typeface', serif;
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.urduContent pre,
+.urduContent code {
+  direction: ltr;
+  text-align: left;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+.urduContent table {
+  direction: rtl;
+}
+
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;

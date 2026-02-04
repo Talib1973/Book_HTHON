@@ -84,7 +84,7 @@ module.exports = async function handler(req, res) {
       const row = await db.query(
         `SELECT python_experience, ros_experience, has_rtx_gpu, gpu_model,
                 has_jetson, jetson_model, robot_type, learning_goals,
-                created_at, updated_at
+                language_preference, created_at, updated_at
          FROM user_profile WHERE user_id = $1`,
         [userId]
       );
@@ -101,6 +101,7 @@ module.exports = async function handler(req, res) {
         jetson_model: p.jetson_model,
         robot_type: p.robot_type,
         learning_goals: p.learning_goals || [],
+        language_preference: p.language_preference || "en",
         created_at: p.created_at?.toISOString(),
         updated_at: p.updated_at?.toISOString(),
       });

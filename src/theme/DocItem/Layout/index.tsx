@@ -9,6 +9,13 @@ export default function DocItemLayout(props: Props): React.ReactNode {
       <BrowserOnly>
         {() => {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const LanguageToggle = require('@site/src/components/LanguageToggle').default;
+          return <LanguageToggle />;
+        }}
+      </BrowserOnly>
+      <BrowserOnly>
+        {() => {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
           const PersonalizeButton = require('@site/src/components/PersonalizeButton').default;
           return <PersonalizeButton />;
         }}
