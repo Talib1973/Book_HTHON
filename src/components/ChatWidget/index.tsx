@@ -35,8 +35,8 @@ const getApiUrl = (): string => {
     return 'http://localhost:8000/chat';
   }
 
-  // Production: Railway backend URL
-  return 'https://victorious-presence-production.up.railway.app/chat';
+  // Production: Hugging Face Spaces backend URL
+  return 'https://talibhussain-book-hthon-backend.hf.space/chat';
 };
 
 const API_URL = getApiUrl();
