@@ -210,10 +210,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
 ## Recent Changes
+- 006-urdu-translation: Added TypeScript / Node.js >= 20 (frontend + serverless); Python 3.11+ (FastAPI backend) + Docusaurus 3.9.2, React 19, better-auth 1.4.17, pg 8.x, react-markdown (NEW), Cohere SDK (existing, backend)
 - 005-better-auth-personalization: Added Python 3.11+ (FastAPI backend), TypeScript/Node.js 20+ (Better Auth service), TypeScript/React 19 (Docusaurus frontend) + Better Auth 1.x, FastAPI 0.100+, Docusaurus 3.9.2, asyncpg (PostgreSQL client), Better Auth React SDK
 - 004-fastapi-frontend-integration: Added Python 3.11+ (backend), TypeScript/React 19 (frontend)
-- 003-rag-agent: Added Python 3.11+ (existing backend/pyproject.toml specifies python = ">=3.11")
 
 ## Active Technologies
-- Python 3.11+ (FastAPI backend), TypeScript/Node.js 20+ (Better Auth service), TypeScript/React 19 (Docusaurus frontend) + Better Auth 1.x, FastAPI 0.100+, Docusaurus 3.9.2, asyncpg (PostgreSQL client), Better Auth React SDK (005-better-auth-personalization)
-- Neon Serverless PostgreSQL (shared across Better Auth and FastAPI) (005-better-auth-personalization)
+- TypeScript / Node.js >= 20 (frontend + serverless); Python 3.11+ (FastAPI backend) + Docusaurus 3.9.2, React 19, better-auth 1.4.17, pg 8.x, react-markdown (NEW), Cohere SDK (existing, backend) (006-urdu-translation)
+- Neon Serverless PostgreSQL (`user_profile` table — one column added); static files in `static/docs-ur/` (006-urdu-translation)

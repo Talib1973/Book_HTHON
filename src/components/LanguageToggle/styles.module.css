@@ -1,0 +1,74 @@
+/* ── LanguageToggle pill toggle ── */
+.toggleContainer {
+  display: flex;
+  gap: 0;
+  margin: 0.75rem 0 1rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid var(--ifm-color-primary);
+  width: fit-content;
+}
+
+.toggleBtn {
+  padding: 0.5rem 1.1rem;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+}
+
+.toggleBtn:hover {
+  background: var(--ifm-color-primary-lightest);
+}
+
+.active {
+  background: var(--ifm-color-primary);
+  color: #fff;
+}
+
+.active:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+/* ── Urdu content container (RTL + font) ── */
+.urduContent {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Nastaliq', 'Urdu Typeface', serif;
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+/* Code blocks inside Urdu stay LTR */
+.urduContent pre,
+.urduContent code {
+  direction: ltr;
+  text-align: left;
+  font-family: var(--ifm-font-family-monospace);
+}
+
+/* Tables in RTL */
+.urduContent table {
+  direction: rtl;
+}
+
+/* Headings */
+.urduContent h1,
+.urduContent h2,
+.urduContent h3,
+.urduContent h4 {
+  text-align: right;
+}
+
+/* Lists */
+.urduContent ul,
+.urduContent ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
