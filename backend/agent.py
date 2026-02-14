@@ -50,7 +50,7 @@ client = AsyncOpenAI(
     api_key=ROUTER_API_KEY,
     base_url="https://openrouter.ai/api/v1"
 )
-third_party_model = OpenAIChatCompletionsModel(openai_client=client, model="mistralai/devstral-2512:free")
+third_party_model = OpenAIChatCompletionsModel(openai_client=client, model="anthropic/claude-3-haiku")
 # Global client variables (initialized in main(), used in retrieve_textbook_content)
 cohere_client: Optional[cohere.Client] = None
 qdrant_client: Optional[QdrantClient] = None
