@@ -1,5 +1,6 @@
 """
 FastAPI backend for RAG chatbot integration with Docusaurus frontend.
+Model: anthropic/claude-3-haiku via OpenRouter.
 
 This module provides a REST API endpoint for the Physical AI & Humanoid Robotics
 textbook chatbot, enabling the Docusaurus frontend to interact with the RAG agent.
