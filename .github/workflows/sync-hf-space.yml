@@ -29,6 +29,7 @@ jobs:
           # Sync backend/ contents into HF Space (overwrite, keep HF-only files)
           rsync -av --delete \
             --exclude='.git' \
+            --exclude='README.md' \
             backend/ hf-space/
 
           # Commit and push if there are changes
